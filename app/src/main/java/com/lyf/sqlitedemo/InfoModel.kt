@@ -1,3 +1,3 @@
-package com.lyf.sqlitedemo.basic
+package com.lyf.sqlitedemo
 
 data class InfoModel(val name: String, val age: Int)

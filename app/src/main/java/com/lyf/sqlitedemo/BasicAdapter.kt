@@ -1,11 +1,10 @@
-package com.lyf.sqlitedemo.basic
+package com.lyf.sqlitedemo
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.recyclerview.widget.RecyclerView
-import com.lyf.sqlitedemo.R
 
 class BasicAdapter(val mDatas: List<InfoModel>) : RecyclerView.Adapter<BasicAdapter.ViewHolder>() {
 

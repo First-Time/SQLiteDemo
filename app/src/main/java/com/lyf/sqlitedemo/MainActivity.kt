@@ -3,6 +3,7 @@ package com.lyf.sqlitedemo
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.lyf.sqlitedemo.advanced.AdvancedActivity
 import com.lyf.sqlitedemo.basic.BasicActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -20,5 +21,8 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, BasicActivity::class.java))
         }
 
+        btn_advanced.setOnClickListener {
+            startActivity(Intent(this, AdvancedActivity::class.java))
+        }
     }
 }

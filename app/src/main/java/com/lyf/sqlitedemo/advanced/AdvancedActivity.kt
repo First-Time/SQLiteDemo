@@ -1,32 +1,39 @@
-package com.lyf.sqlitedemo.basic
+package com.lyf.sqlitedemo.advanced
 
 import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.lyf.sqlitedemo.BasicAdapter
 import com.lyf.sqlitedemo.InfoModel
 import com.lyf.sqlitedemo.R
-import kotlinx.android.synthetic.main.activity_basic.*
+import kotlinx.android.synthetic.main.activity_advanced.*
+import kotlinx.android.synthetic.main.activity_basic.btnAdd
+import kotlinx.android.synthetic.main.activity_basic.etAge
+import kotlinx.android.synthetic.main.activity_basic.etName
+import kotlinx.android.synthetic.main.activity_basic.recyclerView
 
-private const val tableName = "user"
+private const val tableName = "user_dict"
 private const val nameColumn = "user_name"
 private const val ageColumn = "user_age"
 
-class BasicActivity : AppCompatActivity() {
-    private lateinit var db: SQLiteDatabase
+class AdvancedActivity : AppCompatActivity() {
+    private lateinit var dbHelper: MyDatabaseHelper
     private lateinit var layoutManager: RecyclerView.LayoutManager
     private lateinit var mAdapter: BasicAdapter
     private var dataList: MutableList<InfoModel> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_basic)
-
-        db = SQLiteDatabase.openOrCreateDatabase("$filesDir/my.db3", null)
+        setContentView(R.layout.activity_advanced)
+        //创建MyDatabaseHelper对象，指定数据库版本为1，此处使用相对路径即可
+        //数据库文件自动保存在程序的数据文件夹的databases目录下
+//        dbHelper = MyDatabaseHelper(this, "userDict.db3", 1)
+        dbHelper = MyDatabaseHelper(this, "userDict.db3", 2)
 
         layoutManager = LinearLayoutManager(this)
         recyclerView.layoutManager = layoutManager
@@ -35,33 +42,38 @@ class BasicActivity : AppCompatActivity() {
         recyclerView.adapter = mAdapter
 
         initListener()
-
-        inflateData(queryCursor())
     }
 
     private fun initListener() {
         btnAdd.setOnClickListener {
-
             val name = etName.text.toString()
             val age = etAge.text.toString().toInt()
 
-            val insertValue = insertUser(db, name, age)
-            if (insertValue == -1L) {
-                db.execSQL(
-                    "create table user(_id integer primary key autoincrement, $nameColumn varchar(50), $ageColumn integer)"
-                )
-                insertUser(db, name, age)
+            val insertValue = insertUser(dbHelper.writableDatabase, name, age)
+            if (insertValue != -1L) {
+                Toast.makeText(this, "添加用户信息成功", Toast.LENGTH_SHORT)
             }
+        }
 
-            inflateData(queryCursor())
+        btnSearch.setOnClickListener {
+            val searchKey = etSearch.text.toString()
+            inflateData(queryCursor(searchKey))
         }
     }
 
-    private fun queryCursor(): Cursor? {
+    private fun queryCursor(key: String): Cursor? {
         var cursor: Cursor? = null
         try {
             cursor =
-                db.query(tableName, arrayOf(nameColumn, ageColumn), null, null, null, null, null)
+                dbHelper.readableDatabase.query(
+                    tableName,
+                    arrayOf(nameColumn, ageColumn),
+                    "$nameColumn like ? or $ageColumn like ?",
+                    arrayOf("%$key%", "%$key%"),
+                    null,
+                    null,
+                    null
+                )
         } catch (e: Exception) {
         }
         return cursor
@@ -83,6 +95,14 @@ class BasicActivity : AppCompatActivity() {
                 dataList.add(InfoModel(name, age))
             }
             mAdapter.notifyDataSetChanged()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // 退出程序时关闭MyDatabaseHelper里的SQLiteDatabase
+        if (dbHelper != null) {
+            dbHelper.close()
         }
     }
 }
